@@ -109,6 +109,14 @@ class MultiModalDataCollatorForSeq2Seq(DataCollatorForSeq2Seq):
     def __call__(self, features: list[dict[str, Any]]) -> dict[str, "torch.Tensor"]:
         batch_images, batch_videos, batch_audios = [], [], []
         batch_imglens, batch_vidlens, batch_audlens, batch_input_ids = [], [], [], []
+        # for embodied reasoner
+        feedback_idx = self.tokenizer.encode("<|feedback|>")[0]
+        for feature in features:
+            if feedback_idx in feature['input_ids']:
+                index = feature['input_ids'].index(feedback_idx)
+                for i, label in enumerate(feature['labels']):
+                    if i <= index:
+                        feature["labels"][i] = IGNORE_INDEX
         for feature in features:
             images = feature.pop("images", None) or []
             videos = feature.pop("videos", None) or []
